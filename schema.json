@@ -1,0 +1,36 @@
+{
+  "type": "component",
+  "metadata": {},
+  "schema": {
+    "name": "calendar",
+    "friendlyName": "Calendar",
+    "description": "Calendar",
+    "icon": "Text",
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Data provider",
+        "key": "dataProvider",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Event date field Mapping (data source)",
+        "key": "eventDateMapping",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Event title mapping (data source)",
+        "key": "eventTitleMapping",
+        "required": true
+      },
+      {
+        "type": "event",
+        "label": "On Event Click",
+        "key": "onEventClick",
+        "required": false
+      }
+    ]
+  }
+}
