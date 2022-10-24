@@ -155,12 +155,14 @@
 		<!-- {eventText} -->
 	</div>
 
+	{#key items}
 	<Calendar
 		{headers}
 		{days}
 		{items}
     on:itemClick={(e)=>itemClick(e)}
 		/>
+	{/key}
 </div>
 	
 <style>
