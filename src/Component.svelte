@@ -29,9 +29,6 @@
     }
   }) ?? [];
 
-  console.log(allItems);
-  console.log(onEventClick);
-
 	var days = [];	//	The days to display in each box
 
 	function randInt(max) {
@@ -41,17 +38,22 @@
 	//	The Calendar Component just displays stuff in a row & column. It has no knowledge of dates.
 	//	The items[] below are placed (by you) in a specified row & column of the calendar.
 	//	You need to call findRowCol() to calc the row/col based on each items start date. Each date box has a Date() property.
-	//	And, if an item overlaps rows, then you need to add a 2nd item on the subsequent row.
 	var items = [];
 
-	function initMonthItems() {
+	const initMonthItems = () => {
     items = [];
     
-		let y = year;
+		let y = year - 1900;
 		let m = month;
 
+    let thisMonthItems = allItems.filter(x => {
+      let xM = Number(x.date.getMonth())
+      let xY = Number(x.date.getYear())
+      return xM == m && xY == y;
+    });
+
 		//This is where you calc the row/col to put each dated item
-		for (let i of allItems) {
+		for (let i of thisMonthItems) {
 			let rc = findRowCol(i.date);
 			if (rc == null) {
 				i.startCol = i.startRow = 0;
@@ -125,20 +127,34 @@
 	function headerClick(e) {
 		
 	}
-	function next() {
+	function nextMonth() {
 		month++;
 		if (month == 12) {
 			year++;
 			month=0;
 		}
+    initMonth();
+		initMonthItems();
 	}
-	function prev() {
+  function nextYear() {
+		year++;
+    initMonth();
+		initMonthItems();
+	}
+	function prevMonth() {
 		if (month==0) {
 			month=11;
 			year--;
 		} else {
 			month--;
 		}
+    initMonth();
+		initMonthItems();
+	}
+  function prevYear() {
+		year--;
+    initMonth();
+		initMonthItems();
 	}
 	
 </script>
@@ -147,21 +163,21 @@
   <div class="calendar-header">
     <h1>
       <button on:click={()=>year--}>&Lt;</button>
-      <button on:click={()=>prev()}>&lt;</button>
+      <button on:click={()=>prevMonth()}>&lt;</button>
        {monthNames[month]} {year}
-      <button on:click={()=>next()}>&gt;</button>
+      <button on:click={()=>nextMonth()}>&gt;</button>
       <button on:click={()=>year++}>&Gt;</button>
     </h1>
 		<!-- {eventText} -->
 	</div>
 
 	{#key items}
-	<Calendar
-		{headers}
-		{days}
-		{items}
-    on:itemClick={(e)=>itemClick(e)}
-		/>
+		<Calendar
+			{headers}
+			{days}
+			{items}
+		on:itemClick={(e)=>itemClick(e)}
+			/>
 	{/key}
 </div>
 	
