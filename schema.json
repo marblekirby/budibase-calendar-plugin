@@ -15,7 +15,7 @@
       },
       {
         "type": "text",
-        "label": "Event date field Mapping (data source)",
+        "label": "Event date/time Mapping (data source)",
         "key": "eventDateMapping",
         "required": true
       },
@@ -26,10 +26,37 @@
         "required": true
       },
       {
+        "type": "text",
+        "label": "Allday mapping (data source)",
+        "key": "eventAllDayMapping",
+        "required": false
+      },
+      {
         "type": "event",
         "label": "On Event Click",
         "key": "onEventClick",
         "required": false
+      },
+      {
+        "type": "color",
+        "label": "Header Background Color",
+        "key": "stylingHeaderBackgroundColor",
+        "required": true,
+        "defaultValue": "#eef"
+      },
+      {
+        "type": "color",
+        "label": "Header Text Color",
+        "key": "stylingHeaderTextColor",
+        "required": true,
+        "defaultValue": "rgba(81, 86, 93, 0.7)"
+      },
+      {
+        "type": "color",
+        "label": "Event Highlight Color",
+        "key": "stylingEventHighlightColor",
+        "required": true,
+        "defaultValue": "rgb(38, 128, 235)"
       }
     ]
   }

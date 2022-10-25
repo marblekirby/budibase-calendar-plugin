@@ -1,7 +1,7 @@
 <!-- Credit: https://svelte.dev/repl/5aa7d011c2104b0c8906248f66da22ea?version=3.12.1 -->
 <div class="calendar">
 	{#each headers as header}
-	<span class="day-name" on:click={()=>dispatch('headerClick',header)}>{header}</span>
+	  <span class="day-name" on:click={()=>dispatch('headerClick',header)}>{header}</span>
 	{/each}
 
 	{#each days as day}
@@ -13,19 +13,45 @@
 	{/each}
 
 	{#each groupedItemsArray as itemsArray}
-        <div
-            class="task"
-            style="grid-column: {itemsArray[0].startCol} / span {1};      
-            grid-row: {itemsArray[0].startRow};"
-            >
-                {#each itemsArray as item}
-                    <div
-                        on:click={()=>dispatch('itemClick',item)} 
-                        class="event">
-                        {item.title}
+    <div
+        class="task"
+        style="grid-column: {itemsArray[0].startCol} / span {1};      
+        grid-row: {itemsArray[0].startRow};"
+        >
+            {#each itemsArray as item}
+              {#if item.allDay}
+                <div class="event-wrapper">
+                  <a on:click={()=>dispatch('itemClick',item)} 
+                    class="event all-day-event" 
+                    style="background-color: {styling.eventHighlightColor}; border: 4px solid {styling.eventHighlightColor};"
+                    onMouseOver="this.style.filter = 'brightness(85%)'"
+                    onMouseOut="this.style.filter = 'brightness(100%)'"
+                    >
+                    <div class="event-title">
+                      {item.title}
                     </div>
-                {/each}
-            </div>
+                  </a>
+                </div>
+              {:else}
+                <div class="event-wrapper">
+                  <a on:click={()=>dispatch('itemClick',item)} 
+                    class="event event-time"
+                    style="background-color: white"
+                    onMouseOver="this.style.filter = 'brightness(85%)'"
+                    onMouseOut="this.style.filter = 'brightness(100%)'"
+                    >
+                      <div class="event-dot" style="border: calc(8px/2) solid {styling.eventHighlightColor};"></div>
+                      <div class="event-time">
+                        {item.time}
+                      </div>
+                      <div class="event-title">
+                        {item.title}
+                      </div>
+                  </a>
+                </div>
+              {/if}
+            {/each}
+        </div>
     {/each}
 </div>
 
@@ -42,9 +68,27 @@
 	export var headers = [];
 	export let days = [];
 	export let items = [];
-    let groupedItems = groupBy(items, 'combo');
-    let keys = Object.keys(groupedItems);
-    let groupedItemsArray = keys.map(key => groupedItems[key]);
+  export let styling = {};
+
+  let groupedItems = groupBy(items, 'combo');
+  let keys = Object.keys(groupedItems);
+  let groupedItemsArray = keys.map(key => groupedItems[key].sort((a, b) => {
+    if(a.allDay && b.alLDay) 
+      return a.title.localeCompare(b.title);
+    else if(a.allDay && !b.allDay) {
+      return -5;
+    } else if(!a.allDay && b.allDay) {
+      return 5;
+    } else {
+      if(a.date.getTime() == b.date.getTime()) {
+        return a.title.localeCompare(b.title) * 101;
+      } else if (a.date.getTime() > b.date.getTime()) {
+        return -100;
+      } else {
+        return 100;
+      }
+    }
+  }));
 
 	let dispatch = createEventDispatcher();
 	
@@ -59,17 +103,64 @@
   grid-auto-rows: unset;
   overflow: auto;
 }
-.event {
-    /* cursor: pointer; */
-    padding: 6px;
-    background-color: rgb(5, 7, 100);
-    color: white;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 12px;
-    margin: 2px 8px;
-    line-height: 12px;
+.event-wrapper {
+  clear: both;
+  content: "";
+  display: table;
+  margin-top: 0px;
+  width: 100%;
 }
+.event {
+  color: #3e4042;
+  cursor: pointer;
+  align-items: center;
+  display: flex;
+  text-decoration: none;
+  cursor: pointer;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-top: 1px;
+  z-index: 6;
+  border-radius: 3px;
+  font-size: .85em;
+  position: relative;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+/* .time-event {
+
+} */
+/* .time-event:hover {
+  background: rgba(0,0,0,.1);
+} */
+.event-time {
+  margin-right: 3px;
+  padding: 2px 0;
+  margin-bottom: 1px;
+}
+.event-title {
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  margin-bottom: 1px;
+}
+.all-day-event {
+  text-align: center;
+  color: white;
+  border-radius: 8px;
+  font-size: .85em;
+  line-height: 10px;
+}
+.event-dot {
+  border-radius: 4px;
+  border-radius: calc(8px/2);
+  box-sizing: content-box;
+  height: 0;
+  margin: 0 4px;
+  width: 0;
+  }
 .day {
   border-bottom: 1px solid rgba(166, 168, 179, 0.12);
   border-right: 1px solid rgba(166, 168, 179, 0.12);
@@ -125,16 +216,19 @@
   grid-column: 7/7;
 }
 .day-name {
-  font-size: 12px;
+  opacity: 0.75;
+  color: #3e4042;
+  font-size: var(--spectrum-global-dimension-font-size-200);
+  font-weight: 600;
+  /* font-size: 12px; */
   text-transform: uppercase;
-  color: #e9a1a7;
+  /* color: #e9a1a7; */
   text-align: center;
   border-bottom: 1px solid rgba(166, 168, 179, 0.12);
   line-height: 50px;
-  font-weight: 500;
 }
 .day-disabled {
-  color: rgba(152, 160, 166, 0.5);
+  color: rgba(152, 160, 166, 0.75);
   background-color: #ffffff;
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fdf9ff' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
   cursor: not-allowed;
@@ -146,7 +240,7 @@
 	z-index:2;
 	border-radius: 15px;
 }
-.event:first-of-type {
+.event-wrapper:first-of-type {
     margin-top: 30px;
 }
 .task--warning {

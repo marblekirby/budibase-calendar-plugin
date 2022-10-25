@@ -2,16 +2,26 @@
 	import Calendar from "./Calendar.svelte";
 	import {getContext, createEventDispatcher, onMount} from 'svelte';
 
-  const { styleable } = getContext("sdk")
-  const component = getContext("component")
+	const { styleable } = getContext("sdk")
+	const component = getContext("component")
 
-  export let dataProvider;
-  export let eventDateMapping;
-  export let eventTitleMapping;
-  export let onEventClick = null;
+	export let dataProvider;
+	export let eventDateMapping;
+	export let eventTitleMapping;
+	export let eventAllDayMapping = null;
+	export let onEventClick = null;
+	export let stylingHeaderBackgroundColor;
+	export let stylingHeaderTextColor;
+	export let stylingEventHighlightColor;
 
 	var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 	let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+	var styling = {
+		headerBackgroundColor: stylingHeaderBackgroundColor,
+		headerTextColor: stylingHeaderTextColor,
+		eventHighlightColor: stylingEventHighlightColor
+	}
 
 	let headers = [];
 	let now = new Date();
@@ -19,15 +29,30 @@
 	let month = now.getMonth();
 	// let eventText="Click an item or date";
 
-  let dateKey = eventDateMapping;
-  let titleKey = eventTitleMapping;
+	let dateKey = eventDateMapping;
+	let titleKey = eventTitleMapping;
+	let allDayKey = eventAllDayMapping;
 
-  let allItems = dataProvider?.rows?.map(x => { 
-    return {
-      title: x[titleKey],
-      date: new Date(x[dateKey])
-    }
-  }) ?? [];
+  const formatAMPM = (date) => {
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    minutes = minutes.toString().padStart(2, '0');
+    let strTime = hours + ':' + minutes + ' ' + ampm;
+    return strTime;
+  }
+
+	let allItems = dataProvider?.rows?.map(x => { 
+		let d = new Date(x[dateKey]);
+		return {
+			title: x[titleKey],
+			date: d,
+			allDay: allDayKey && x[allDayKey],
+			time: formatAMPM(d)
+		}
+	}) ?? [];
 
 	var days = [];	//	The days to display in each box
 
@@ -41,16 +66,16 @@
 	var items = [];
 
 	const initMonthItems = () => {
-    items = [];
-    
+		items = [];
+		
 		let y = year - 1900;
 		let m = month;
 
-    let thisMonthItems = allItems.filter(x => {
-      let xM = Number(x.date.getMonth())
-      let xY = Number(x.date.getYear())
-      return xM == m && xY == y;
-    });
+		let thisMonthItems = allItems.filter(x => {
+			let xM = Number(x.date.getMonth())
+			let xY = Number(x.date.getYear())
+			return xM == m && xY == y;
+		});
 
 		//This is where you calc the row/col to put each dated item
 		for (let i of thisMonthItems) {
@@ -60,9 +85,9 @@
 			} else {
 				i.startCol = rc.col;
 				i.startRow = rc.row;
-        i.combo = `${rc.row},${rc.col}`
+				i.combo = `${rc.row},${rc.col}`
 
-        items.push(i);
+				items.push(i);
 			}
 		}
 	}
@@ -122,22 +147,18 @@
     if(onEventClick)
 		  onEventClick(e);
 	}
+
 	function dayClick(e) {
 	}
 	function headerClick(e) {
-		
 	}
+
 	function nextMonth() {
 		month++;
 		if (month == 12) {
 			year++;
 			month=0;
 		}
-    initMonth();
-		initMonthItems();
-	}
-  function nextYear() {
-		year++;
     initMonth();
 		initMonthItems();
 	}
@@ -151,28 +172,26 @@
     initMonth();
 		initMonthItems();
 	}
-  function prevYear() {
-		year--;
-    initMonth();
-		initMonthItems();
-	}
 	
 </script>
 
 <div class="calendar-container" use:styleable={$component.styles}>
-  <div class="calendar-header">
-    <h1>
-      <button on:click={()=>year--}>&Lt;</button>
-      <button on:click={()=>prevMonth()}>&lt;</button>
-       {monthNames[month]} {year}
-      <button on:click={()=>nextMonth()}>&gt;</button>
-      <button on:click={()=>year++}>&Gt;</button>
-    </h1>
-		<!-- {eventText} -->
-	</div>
+	{#key stylingHeaderBackgroundColor}
+		<div class="calendar-header" style="background: {styling.headerBackgroundColor};">
+			<h1 style="color: {styling.headerTextColor};">
+				<button style="color: {styling.headerTextColor}; background: {styling.headerBackgroundColor};" on:click={()=>year--}>&Lt;</button>
+				<button style="color: {styling.headerTextColor}; background: {styling.headerBackgroundColor}" on:click={()=>prevMonth()}>&lt;</button>
+				{monthNames[month]} {year}
+				<button style="color: {styling.headerTextColor}; background: {styling.headerBackgroundColor}" on:click={()=>nextMonth()}>&gt;</button>
+				<button style="color: {styling.headerTextColor}; background: {styling.headerBackgroundColor}" on:click={()=>year++}>&Gt;</button>
+			</h1>
+			<!-- {eventText} -->
+		</div>
+	{/key}
 
 	{#key items}
-		<Calendar
+		<Calendar 
+			{styling}
 			{headers}
 			{days}
 			{items}
@@ -194,7 +213,6 @@
 .calendar-header {
   text-align: center;
   padding: 20px 0;
-  background: #eef;
   border-bottom: 1px solid rgba(166, 168, 179, 0.12);
 }
 .calendar-header h1 {
@@ -202,10 +220,8 @@
   font-size: 18px;
 }
 .calendar-header button {
-  background: #eef;
   border: 1px ;
   padding: 6;
-  color: rgba(81, 86, 93, 0.7);
   cursor: pointer;
   outline: 0;
 }
